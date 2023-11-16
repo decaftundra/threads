@@ -1,3 +1,9 @@
+/**
+ * Renders a form for updating the user's account profile information, including name, username, bio, and profile photo.
+ * @param user - The user object containing the current profile information.
+ * @param btnTitle - The title of the submit button.
+ * @returns A form component with input fields for updating the user's account profile information.
+ */
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -21,6 +27,8 @@ import { ChangeEvent, useState } from "react";
 import { Textarea } from "../ui/textarea";
 import { isBase64Image } from "@/lib/utils";
 import { useUploadThing } from "@/lib/uploadthing";
+import { updateUser } from "@/lib/actions/user.actions";
+import { usePathname, useRouter } from "next/navigation";
 
 interface Props {
   user: {
@@ -33,14 +41,17 @@ interface Props {
   };
   btnTitle: string;
 }
-const AccountProfile = ({ user, btnTitle }: Props) => {
-  /**
-   * useForm hook to handle the Account Profile form.
-   * @returns {Object} form - The form object containing the resolver and default values.
-   */
 
+/**
+ * useForm hook to handle the Account Profile form.
+ * @returns {Object} form - The form object containing the resolver and default values.
+ */
+const AccountProfile = ({ user, btnTitle }: Props) => {
   const [files, setFiles] = useState<File[]>([]);
   const { startUpload } = useUploadThing("media");
+  const router = useRouter();
+  const pathname = usePathname();
+
   const form = useForm({
     resolver: zodResolver(UserValidation),
     defaultValues: {
@@ -71,6 +82,7 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
     }
   };
 
+  // Handle form submit
   const onSubmit = async (values: z.infer<typeof UserValidation>) => {
     const blob = values.profile_photo;
 
@@ -83,7 +95,20 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
         values.profile_photo = imgRes[0].url;
       }
     }
-    // TODO: Update user profile
+    await updateUser({
+      username: values.username,
+      name: values.name,
+      bio: values.bio,
+      image: values.profile_photo,
+      userId: user.id,
+      path: pathname,
+    });
+
+    if (pathname === '/profile/edit') {
+      router.back();
+    } else {
+      router.push('/');
+    }
   };
 
   return (
