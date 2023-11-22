@@ -34,6 +34,8 @@ export async function updateUser({
         onboarded: true,
       },
       { upsert: true }
+      // The `upsert` option is typically used in scenarios where you want to ensure that a document exists in the database, regardless of whether it was already present or not.
+      // By setting`upsert` to`true`, the database operation will attempt to update the document if it exists, and if it doesn't, it will create a new document with the provided data.
     );
     if (path === "/profile/edit") {
       revalidatePath(path);
@@ -46,13 +48,12 @@ export async function updateUser({
 export async function fetchUser(userId: string) {
   try {
     connectToDB();
-    return await User
-      .findOne({ id: userId })
-      // .populate({
-      //   path: 'communities',
-      //   model: Community
-      // })
-  } catch (error : any) {
+    return await User.findOne({ id: userId });
+    // .populate({
+    //   path: 'communities',
+    //   model: Community
+    // })
+  } catch (error: any) {
     throw new Error(`failed to fetch user: ${error.message}`);
   }
 }
